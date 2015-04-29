@@ -13,15 +13,28 @@ def connect():
 
 def deleteMatches():
     """Remove all the match records from the database."""
-
+    pg = connect()
+    c = pg.cursor()
+    c.execute("DELETE FROM match")
+    pg.commit()
+    pg.close()
 
 def deletePlayers():
     """Remove all the player records from the database."""
-
+    pg = connect()
+    c = pg.cursor()
+    c.execute("DELETE FROM players")
+    pg.commit()
+    pg.close()
 
 def countPlayers():
     """Returns the number of players currently registered."""
-
+    pg = connect()
+    c = pg.cursor()
+    c.execute("SELECT COUNT (*) FROM players")
+    fetch = c.fetchone()[0]
+    pg.close()
+    return int(fetch)
 
 def registerPlayer(name):
     """Adds a player to the tournament database.
@@ -32,6 +45,11 @@ def registerPlayer(name):
     Args:
       name: the player's full name (need not be unique).
     """
+    pg = connect()
+    c = pg.cursor()
+    c.execute("INSERT INTO players (name, wins, matches) VALUES (%s, 0, 0)", (name,))
+    pg.commit()
+    pg.close()
 
 
 def playerStandings():
@@ -47,7 +65,12 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-
+    pg = connect()
+    c = pg.cursor()
+    c.execute("SELECT * FROM players ORDER BY wins desc")
+    fetch = c.fetchall()
+    pg.close()
+    return fetch
 
 def reportMatch(winner, loser):
     """Records the outcome of a single match between two players.
@@ -56,7 +79,13 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
- 
+    pg = connect()
+    c = pg.cursor()
+    c.execute("INSERT INTO match (p1_id, p2_id, winner) VALUES (%s, %s, %s)", (winner,loser,winner))
+    c.execute("UPDATE players SET wins = wins + 1 where id = %s", (winner,))
+    c.execute("UPDATE players SET matches = matches + 1 where id = %s OR id = %s", (winner,loser))
+    pg.commit()
+    pg.close()
  
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
@@ -73,5 +102,21 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-
+    standings = playerStandings()
+    i = 0
+    result = []
+    while (i < (len(standings))):
+        pg = connect()
+        c = pg.cursor()
+        extender = ()
+        c.execute("SELECT id, name FROM players ORDER BY wins desc LIMIT 2 offset %s", (i,))
+        fetch = c.fetchall()
+        pg.close()
+        extender = fetch[0] + fetch[1]
+        result.append(extender)
+        i += 2
+        
+    return result
+    
+    
 
