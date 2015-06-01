@@ -43,6 +43,7 @@ def createTournament(id=1, name="Tournament 1"):
     """Create a new tournament."""
     pg = connect()
     c = pg.cursor()
+	#insert the values provided into the Tournaments table
     c.execute("INSERT INTO Tournaments (id, name)SELECT %s, %s WHERE NOT EXISTS (SELECT id FROM Tournaments WHERE id = %s)", (id, name, id))
     pg.commit()
     pg.close()
@@ -67,6 +68,7 @@ def countPlayers(tournament=1):
     """Returns the number of players currently registered."""
     pg = connect()
     c = pg.cursor()
+	#only looking for the specified tournament
     c.execute("SELECT COUNT (*) FROM Registrants WHERE tournament_id=(%s)", (tournament,))
     fetch = c.fetchone()[0]
     pg.close()
@@ -126,25 +128,6 @@ def playerStandings(tournament=1):
     c = pg.cursor()
     c.execute("SELECT player_id, name, wins, matches FROM v_standings WHERE tournament_id = %s", ([tournament]))
     fetch = c.fetchall()
-    
-    
-    #query = """SELECT %s as Player, SUM (wins) AS OMW 
-    #FROM (SELECT DISTINCT winner, wins 
-    #      FROM v_wins, Matches 
-    #      WHERE (Matches.player_1 = %s OR Matches.player_2 = %s)
-    #             AND Matches.winner != %s
-    #             AND v_wins.player_id = matches.winner
-    #      ) o"""
-    #
-    #for player in fetch:
-    #    c.execute(query,(player[0],player[0],player[0],player[0]));
-    #    refetch = c.fetchall()
-    #    player.append(refetch)
-    #for player in fetch:
-    #    c.execute("SELECT %s as player, SUM (wins)ASWinner FROM Matches WHERE (player_1 = %s OR player_2 = %s) AND winner != %s AND tournament_id = %s",(player[0],player[0],player[0],tournament))
-    #    gotIt = c.fetchall()
-    #    print gotIt
-    #    print
     pg.close()  
     return fetch
 
@@ -160,7 +143,6 @@ def reportMatch(winner, loser, tournament=1, tied="n"):
     c = pg.cursor()
     if tied=="n":
         c.execute("INSERT INTO Matches (tournament_id, player_1, player_2, winner) VALUES (%s, %s, %s, %s)", (tournament, winner, loser, winner))
-        #c.execute("UPDATE players SET matches = matches + 1 where id = %s OR id = %s", (winner,loser))
     if tied=="y":
         c.execute("INSERT INTO Matches (tournament_id, player_1, player_2) VALUES (%s, %s, %s)", (tournament, winner, loser))
     pg.commit()
@@ -216,106 +198,8 @@ def swissPairings(tournament=1):
         extender = (standings[i])[:2] + (standings [i+1])[:2]
         result.append(extender)
         i += 2
-        
-    #else:    
-    #    while i < len(standings):
-    #        extender = (standings[i])[:2] + (standings [i+1])[:2]
-    #        result.append(extender)
-    #        i += 2
            
     return result   
-    #if there are an odd number of entrants, enter the 'bye round' player into the tournament.
-    # adding pseudocode here:
-    # if a player has playedBye then go on to the next player.
-    # once a player who hasn't playedBye is found
-    # match that player with the bye round.
-    # exclude that player and the bye round from the standings and reseed the remaining players.
+    
    
     
-    
-'''   
-    pg = connect()
-            c = pg.cursor() 
-            extender = ()
-            c.execute("SELECT player_id, name FROM v_standings WHERE tournament_id = %s ORDER BY wins desc LIMIT 2 offset %s", (tournament,i))
-            fetch = c.fetchall()
-            pg.close()
-            extender = fetch[0] + fetch[1]
-            result.append(extender)
-            i += 2 
-    registerPlayer("Son Goku")
-    registerPlayer("Vegeta")
-    registerPlayer("Piccolo")
-    registerPlayer("Son Gohan")
-    registerPlayer("Krillin")
-        playedBye = True
-        while playedBye == True:
-            pg = connect()
-            c = pg.cursor() 
-            extender = ()
-            c.execute("SELECT player_id FROM v_standings ORDER BY wins desc")
-            fetch = c.fetchall()
-            pg.close()
-            for row in fetch:
-                pg = connect()
-                c = pg.cursor() 
-                c.execute("")
-                fetch = c.fetchall()
-                pg.close()
-                playedBye = (
-            result.append(extender)
-            i += 2
-        
-    else:     
- 
-        
-        
-   
-        ## how do you determine if a player has played 'bye round' (player 0) before?
-        pg = connect()
-        c = pg.cursor()          
-        c.execute("SELECT player_id, name FROM v_standings ORDER BY wins desc LIMIT 1 offset %s", (i,))
-        fetch = c.fetchall()
-        pg.close()
-        extender = fetch[0] + (0, 'bye round')
-        result.append(extender)
-        i += 1
-        ## everyone else gets another matchup
-        while i < len(standings):
-            pg = connect()
-            c = pg.cursor()
-            extender = ()
-            c.execute("SELECT player_id, name FROM v_standings ORDER BY wins desc LIMIT 2 offset %s", (i,))
-            fetch = c.fetchall()
-            pg.close()
-            extender = fetch[0] + fetch[1]
-            result.append(extender)
-            i += 2
- 
-    
-        fetch = (1,)
-        extender = ()
-        for player in standings:
-            while fetch[0] > 0:
-                extender = player
-                pg = connect()
-                c = pg.cursor() 
-                c.execute("SELECT COUNT (*) FROM Matches where tournament_id = %s AND player_1 = %s AND player_2 = 0;", (tournament, player[0]))
-                fetch = c.fetchone()
-                pg.close()
-                
-        pg = connect()
-        c = pg.cursor() 
-        extender = ()
-        c.execute("SELECT player_id, name FROM v_standings ORDER BY wins desc LIMIT 2 offset %s", (i,))
-        fetch = c.fetchall()
-        pg.close()
-        extender = fetch[0] + fetch[1]
-        result.append(extender)
-        i += 2    
-            
- '''    
-    
-    
-    
-

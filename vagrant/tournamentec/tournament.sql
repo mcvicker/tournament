@@ -80,6 +80,9 @@ GROUP BY Registrants.player_id;
 
 -- id, name, wins, matches
 
+/* v_OMW view does not function as I want it to. 
+*/
+
 CREATE VIEW v_OMW AS
 SELECT Matches.tournament_id, winner as player_id, 
        SUM(wins) as OMW
@@ -100,4 +103,5 @@ LEFT OUTER JOIN v_registrant_matches ON (v_registrant_matches.player_id=v_regist
 LEFT OUTER JOIN v_OMW ON (v_wins.player_id = v_OMW.player_id)
 ORDER BY v_wins.wins desc, v_OMW.OMW desc;
 
+--insert an artificial player to act as the bye round. 
 INSERT INTO Players (id, name) VALUES (0, 'bye round');
