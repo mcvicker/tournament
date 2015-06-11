@@ -238,6 +238,7 @@ if __name__ == '__main__':
     testStandingsBeforeMatches()
     testReportMatches()
     testPairings()
+    print "All basic tests pass. \n"
     testOdd()
     testTied()
     testMultipleTourneys()
