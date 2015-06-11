@@ -69,9 +69,9 @@ Returns a list of (id, name, wins, matches) for each player, sorted by the numbe
 
 Given the existing set of registered players and the matches they have played, generates and returns a list of pairings according to the Swiss system. Each pairing is a tuple (id1, name1, id2, name2), giving the ID and name of the paired players. For instance, if there are eight registered players, this function should return four pairings. This function should use playerStandings to find the ranking of players.
 
-*In addition, I have implemented the following extra options*
+*In addition, I have implemented the following extra options and test cases*
 
 * If there is an odd number of players, assign one player a “bye” (skipped round). A bye counts as a free win. A player should not receive more than one bye in a tournament.
 * Games where a draw (tied game) is possible are supported.
-* When two players have the same number of wins, they are ranked according to OMW (Opponent Match Wins), the total number of wins by players they have played against.
-* More than one tournament is now supported in the database, so matches do not have to be deleted between tournaments. This distinguishes between “a registered player” and “a player who has entered in tournament #123”.
+* When two players have the same number of wins, they are ranked according to OMW (Opponent Match Wins), the total number of wins by players they have played against. Thanks to Jeff from Udacity for his help with creating SQL functions. 
+* More than one tournament is now supported in the database, so matches do not have to be deleted between tournaments. This distinguishes between “a registered player” and “a player who has entered in tournament #123”. Thanks go to linusdong for his test-cases. https://github.com/linusdong/Udacity_Nanodegree_FullStackWeb/blob/master/P2/extra_test.py
