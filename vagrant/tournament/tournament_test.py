@@ -125,6 +125,110 @@ def testPairings():
     print "8. After one match, players with one win are paired."
 
 
+#this is to test the results of an Odd Number of registrants
+def testOdd():
+    deleteMatches()
+    deletePlayers()
+    registerPlayer("Rock")
+    registerPlayer("Scissors")
+    registerPlayer("Paper")
+    standings = playerStandings()
+    [id1, id2, id3] = [row[0] for row in standings]
+    pairings1 = swissPairings()
+    if len(pairings1) != 2:
+        raise ValueError(
+            "For three players, swissPairings should return two pairs. (Including one bye)")
+    print "9. With zero matches, one player gets a bye."
+    reportMatch(id1, 0)
+    reportMatch(id2, id3)
+    pairings2 = swissPairings()
+    standings = playerStandings()
+    if pairings1 == pairings2:
+        raise ValueError(
+            "After one match, the bye round should not repeat.")
+    print "10. After one match, the bye round does not repeat."
+
+#this function tests if ties are supported
+def testTied():
+    deleteMatches()
+    deletePlayers()
+    registerPlayer("Rams")
+    registerPlayer("49ers")
+    standings = playerStandings()
+    [id1, id2] = [row[0] for row in standings]
+    reportMatch(id1,id2,1,"y")
+    standings = playerStandings()
+    pairings = swissPairings()
+    [(pid1, pname1, pid2, pname2)] = pairings 
+    correct_pairs = set([frozenset([id1, id2])])
+    actual_pairs = set([frozenset([pid1, pid2])])
+    if correct_pairs != actual_pairs:
+        raise ValueError(
+            "Tied matches not supported.")
+    print "11. Tied matches can be reported."
+
+#this function tests if multiple tournaments are supported. 
+def testMultipleTourneys():
+    deleteMatches()
+    deletePlayers()
+    deleteTournaments()
+    createTournament(2015,"Stanley Cup")
+    createTournament(2014,"Super Bowl")
+    registerPlayer("Denver Broncos", 2014)
+    registerPlayer("New England Patriots", 2014)
+    registerPlayer("Seattle Seahawks", 2014)
+    registerPlayer("Green Bay Packers", 2014)
+    registerPlayer("Chicago Blackhawks", 2015)
+    registerPlayer("Tampa Bay Lightning", 2015)
+    registerPlayer("Anaheim Mighty Ducks", 2015)
+    registerPlayer("New York Rangers", 2015)
+    standings = playerStandings(2014)
+    [id1, id2, id3, id4] = [row[0] for row in standings]
+    reportMatch(id1, id2, 2014)
+    reportMatch(id3, id4, 2014)
+    standings = playerStandings(2015)
+    [id1_2015, id2_2015, id3_2015,id4_2015] = [row[0] for row in standings]
+    reportMatch(id1_2015, id2_2015, 2015)
+    reportMatch(id4_2015, id3_2015, 2015)
+    pairings = swissPairings(2014)
+    if len(pairings) != 2:
+        raise ValueError(
+            "For four players, swissPairings should return two pairs.")
+    [(pid1, pname1, pid2, pname2), (pid3, pname3, pid4, pname4)] = pairings
+    correct_pairs = set([frozenset([id1, id3]), frozenset([id2, id4])])
+    actual_pairs = set([frozenset([pid1, pid2]), frozenset([pid3, pid4])])
+    if correct_pairs != actual_pairs:
+        raise ValueError(
+            "After one match, players with one win should be paired.")
+    print "12. After one match, players with one win in each tourney are paired."
+
+#this function tests to see if results are sorted by opponent match wins. 
+def testOMW():
+    deleteMatches()
+    deletePlayers()
+    deleteTournaments()
+    createTournament(1,"World Martial Arts Championship")
+    registerPlayer("Krillin")
+    registerPlayer("Prince Vegeta")
+    registerPlayer("Freeza")
+    registerPlayer("Son Goku")
+    standings1 = playerStandings()
+    [id1, id2, id3, id4] = [row[0] for row in standings1]
+    for x in range (0,90):
+        reportMatch(id1, id4)
+    reportMatch(id2,id1)
+    reportMatch(id3,id4)
+    standings2 = playerStandings()
+    [idtest1, idtest2, idtest3, idtest4] = [row[0] for row in standings2]
+    initial_standings = set([frozenset([id1,id2,id3,id4])])
+    test_standings = set([frozenset([idtest1,idtest2,idtest3,idtest4])])
+    if initial_standings != test_standings:
+        raise ValueError(
+            "Players are not sorted by Opponent Match Wins.")
+    print "13. Standings are sorted by Opponent Match Wins."
+		
+	
+    
 if __name__ == '__main__':
     testDeleteMatches()
     testDelete()
@@ -134,6 +238,10 @@ if __name__ == '__main__':
     testStandingsBeforeMatches()
     testReportMatches()
     testPairings()
+    testOdd()
+    testTied()
+    testMultipleTourneys()
+    testOMW()
     print "Success!  All tests pass!"
 
 
