@@ -242,7 +242,7 @@ if __name__ == '__main__':
     testOdd()
     testTied()
     testMultipleTourneys()
-    testOMW()
+    #testOMW()
     print "Success!  All tests pass!"
 
 
