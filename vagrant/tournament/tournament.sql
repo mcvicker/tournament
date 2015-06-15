@@ -39,8 +39,8 @@ name text
 
 CREATE TABLE Registrants
 (
-tournament_id integer references Tournaments(id),
-player_id integer references Players(id),
+tournament_id integer references Tournaments(id) ON DELETE CASCADE,
+player_id integer references Players(id) ON DELETE CASCADE,
 PRIMARY KEY (tournament_id, player_id)
 );
 
@@ -56,8 +56,8 @@ CREATE TABLE Matches
 player_1 integer,
 player_2 integer
 CONSTRAINT different_player CHECK (player_1 != player_2),
-FOREIGN KEY (tournament_id, player_1) REFERENCES Registrants(tournament_id, player_id),
-FOREIGN KEY (tournament_id, player_2) REFERENCES Registrants(tournament_id, player_id), 
+FOREIGN KEY (tournament_id, player_1) REFERENCES Registrants(tournament_id, player_id) ON DELETE CASCADE,
+FOREIGN KEY (tournament_id, player_2) REFERENCES Registrants(tournament_id, player_id) ON DELETE CASCADE, 
 winner integer CONSTRAINT match_player CHECK (winner IS NULL OR winner IN (player_1, player_2)),
 PRIMARY KEY (tournament_id, player_1, player_2)
 );
@@ -65,8 +65,8 @@ PRIMARY KEY (tournament_id, player_1, player_2)
 /* A final constraint on matches so that players can only be matched up once per tournament
 This still allows for the same players to be matched in subsequent tournaments.
 For example: Players A and B can play each other in tournament 1, but then B, A 
-cannot play each other in the same tournament. A and B can play each other again in tournament 2 but again, only
-once. */
+cannot play each other in the same tournament. A and B can play each other again in tournament 2 
+but again, only once. */
 
 CREATE UNIQUE INDEX isinglematchup on Matches(tournament_id,GREATEST(player_1,player_2), LEAST(player_1,player_2));
 

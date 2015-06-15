@@ -13,32 +13,36 @@ def connect():
     pg = psycopg2.connect("dbname=tournament")
     return pg
     
-def commit(query,params=()):
-    """Runs SQL commands that require commit statements.""" 
-    pg = connect()
-    c = pg.cursor()
-    c.execute(query,params)
-    pg.commit()
-    pg.close()
+def sql(type,query,params=()):
+    """Runs SQL commands in the tournament database.
     
-def fetchone(query,params=()):
-    """Runs SQL commands that return one row."""
-    pg = connect()
-    c = pg.cursor()
-    c.execute(query,params)
-    fetch = c.fetchone()
-    pg.close()
-    return fetch
+    Args:
+    type is the type of query:
+    type "commit" is used for statements that require a commit (e.g. DELETE, INSERT, etc.).
+    type "fetchone" is used for SELECT statements that return one row.
+    type "fetchall" is used for SELECT statements that return a table.
     
-def fetchall(query,params=()):
-    """Runs SQL commands that return a table."""
+    query is the language of the query.
+    
+    params are the parameters you use for parameter replacement in the query.
+  
+    """
+    if type not in ["commit","fetchone","fetchall"]:
+        raise ValueError(
+            "Type is unknown, please use \"commit\", \"fetchone\", or \"fetchall.\" ")
     pg = connect()
     c = pg.cursor()
     c.execute(query,params)
-    fetch = c.fetchall()
+    if type=="commit":
+        pg.commit()
+        result = None
+    elif type=="fetchone":
+        result = c.fetchone()
+    elif type=="fetchall":
+        result = c.fetchall()
     pg.close()
-    return fetch
-
+    return result
+    
 # "create" functions
 
 def createTournament(id=1, name="Tournament 1"):
@@ -46,7 +50,7 @@ def createTournament(id=1, name="Tournament 1"):
 	#insert the values provided into the Tournaments table if it doesn't already exist.
     query = "INSERT INTO Tournaments (id, name)SELECT %s, %s WHERE NOT EXISTS (SELECT id FROM Tournaments WHERE id = %s)"
     params = (id, name, id)
-    commit(query, params)
+    sql("commit",query, params)
     
     
 def createPlayer(name):
@@ -54,7 +58,7 @@ def createPlayer(name):
     #inserting new player
     query = "INSERT INTO Players (name) VALUES (%s)"
     params = (name,)
-    commit(query, params)
+    sql("commit",query, params)
     
 def reportMatch(winner, loser, tournament=1, tied="n"):
     """Records the outcome of a single match between two players.
@@ -73,7 +77,7 @@ def reportMatch(winner, loser, tournament=1, tied="n"):
     else:
         raise ValueError(
             "Matches must either be tied or not tied. Please use y or n.")
-    commit(query,params)
+    sql("commit",query,params)
 
 # "read" functions
 
@@ -81,14 +85,14 @@ def countPlayers(tournament=1):
     """Returns the number of players currently registered for the given tournament."""
     query = "SELECT COUNT (*) FROM Registrants WHERE tournament_id=(%s)"
     params = (tournament,)
-    fetch = fetchone(query,params)[0]
+    fetch = sql("fetchone",query,params)[0]
     return int(fetch)
     
 def isRegistered(player_id=0,tournament_id=1):
     """Determines if a specific player is registered for a tournament."""
     query = "SELECT COUNT (*) FROM Registrants WHERE tournament_id = %s AND player_id = %s"
     params = (tournament_id,player_id)
-    isRegistered = fetchone(query,params)
+    isRegistered = sql("fetchone",query,params)
     if isRegistered[0] == 1:
         return True
     else:
@@ -109,7 +113,7 @@ def playerStandings(tournament=1):
     """
     query = "SELECT player_id, name, wins, matches FROM getstandings(%s)"
     params =(tournament,)
-    fetch = fetchall(query,params) 
+    fetch = sql("fetchall",query,params) 
     return fetch
 
 def swissPairings(tournament=1):
@@ -154,7 +158,7 @@ def enterTournament(player_id, tournament_id=1):
     #Inserts player into the Registrants table
     query = "INSERT INTO Registrants (tournament_id, player_id) VALUES (%s, %s)" 
     params = (tournament_id, player_id)
-    commit(query,params)
+    sql("commit",query,params)
 
 def registerPlayer(name, tournament=1, tournament_name="Tournament 1"):
     """Adds a player to the tournament database.
@@ -170,7 +174,7 @@ def registerPlayer(name, tournament=1, tournament_name="Tournament 1"):
     createPlayer(name)
 	#gets the most recent player
     query = "SELECT id FROM Players ORDER BY id DESC LIMIT 1"
-    player_id = fetchone(query)
+    player_id = sql("fetchone",query)
     enterTournament(player_id[0], tournament)
     
 def byeMatch(tournament=1):
@@ -183,11 +187,9 @@ def byeMatch(tournament=1):
         extender = ()
         while i < len(standings) and fetch[0] > 0:
             extender = standings[i]
-            pg = connect()
-            c = pg.cursor() 
-            c.execute("SELECT COUNT (*) FROM Matches where tournament_id = %s AND player_1 = %s AND player_2 = 0;", (tournament, (standings[i])[0]))
-            fetch = c.fetchone()
-            pg.close()
+            query = "SELECT COUNT (*) FROM Matches where tournament_id = %s AND player_1 = %s AND player_2 = 0;"
+            params = tournament, (standings[i])[0]
+            fetch = sql("fetchone",query,params)
             if fetch[0] == 0:
                 extender = (standings)[i]
             i += 1
@@ -199,20 +201,18 @@ def byeMatch(tournament=1):
 def deleteMatches():
     """Remove all the match records from the database."""
     query = "DELETE FROM Matches"
-    commit(query)
+    sql("commit",query)
 
 def deletePlayers():
     """Remove all the player records from the database."""
     # We want to remove all registrants, but don't want to delete our bye player
     query = "DELETE FROM Registrants; DELETE FROM Players where id !=0"
-    commit(query)
+    sql("commit",query)
     
 def deleteTournaments():
     """remove all the tournament records from the database."""
-    # can this be fixed with a CASCADE in the database?
-    deleteMatches()
-    query = "DELETE FROM Registrants;DELETE FROM Tournaments"
-    commit(query)
+    query = "DELETE FROM Tournaments"
+    sql("commit",query)
     
 
     
