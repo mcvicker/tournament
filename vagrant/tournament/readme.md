@@ -2,7 +2,15 @@
 
 ###Prerequisites:
 
-**To run this project, you'll need to install vagrant.** For a brief overview of installing vagrant, check here:
+* To run this project, you'll need PostgreSQL 9.3 or higher (tested on 9.3.8) http://www.postgresql.org/
+* You'll also need Python 2.7 (tested on 2.7.6) https://www.python.org/
+* Finally, you'll need psycopg2 2.4 (tested on 2.4.5-1build5) http://initd.org/psycopg/
+
+Copy the tournament files to your machine and run the tournament.sh file to setup.
+
+**To simplify setup, you may wish to install vagrant.** 
+
+For a brief overview of installing vagrant, check here:
 
 https://www.udacity.com/wiki/ud197/install-vagrant
 
@@ -29,9 +37,7 @@ Alternately, you may create the database independently by starting psql from the
 
     \i /vagrant/tournament/tournament.sql
 
-This will allow you to interact with the database directly. If you need to quickly add data, check out this gist from Jeff at Udacity:
-
-https://gist.github.com/jeffudacity/d4ccde9860a7ae40070a
+This will allow you to interact with the database directly.
 
 **Purpose of the Project**
 
@@ -75,3 +81,5 @@ Given the existing set of registered players and the matches they have played, g
 * Games where a draw (tied game) is possible are supported.
 * When two players have the same number of wins, they are ranked according to OMW (Opponent Match Wins), the total number of wins by players they have played against. Thanks to Jeff from Udacity for his help with creating SQL functions. 
 * More than one tournament is now supported in the database, so matches do not have to be deleted between tournaments. This distinguishes between “a registered player” and “a player who has entered in tournament #123”. Thanks go to linusdong for his test-cases. https://github.com/linusdong/Udacity_Nanodegree_FullStackWeb/blob/master/P2/extra_test.py
+* Only one match between two players per tournament is allowed. I have not written a specific test case for this, but running this gist from Jeff at Udacity will quickly reveal that the database doesn't allow rematches:
+https://gist.github.com/jeffudacity/d4ccde9860a7ae40070a
