@@ -114,7 +114,7 @@ def tournamentExists(tournament=1):
         return True
     else:
         raise ValueError(
-            "Check database for consistency.")
+            "Check database for consistency in Tournaments table.")
             
 def playerStandings(tournament=1):
     """Returns a list of the players and their win records, sorted by wins.
@@ -149,31 +149,34 @@ def swissPairings(tournament=1):
         id2: the second player's unique id
         name2: the second player's name
     """
-    standings = playerStandings(tournament)
     i = 0
     result = []
-    #if there are an odd number of players for your tournament, register a bye round
-    if len(standings)%2==1 and not isRegistered(0,tournament):
+    # get the standings
+    standings = playerStandings(tournament)
+    # if there are an odd number of players for your tournament, register a bye round
+    if countPlayers(tournament)%2==1 and not isRegistered(0,tournament):
         enterTournament(0,tournament)
-    #if player 0 (bye round) is registered, determine the bye round match up
+    # if player 0 (bye round) is registered, determine the bye round match-up
     if isRegistered(0,tournament):
-        byePlayer = byeMatch()
-        standings.remove(byePlayer)
-        extender = byePlayer[:2] + (0, 'bye round')
-        result.append(extender)
-    #now create the standings
+        bye = byeMatch()
+        result.append(bye)
+        query = "SELECT player_id, name, wins, matches FROM getstandings(%s) WHERE player_id != %s"
+        params =(tournament,bye[0])
+        standings = sql("fetchall",query,params) 
+    
+    # now create the standings
     while i < len(standings):
         extender = (standings[i])[:2] + (standings [i+1])[:2]
         result.append(extender)
         i += 2
-           
+    
     return result
     
 # "update" functions
 
 def enterTournament(player_id, tournament_id=1):
     """Insert an existing player into a tournament."""
-    #Inserts player into the Registrants table
+    # Inserts player into the Registrants table
     query = "INSERT INTO Registrants (tournament_id, player_id) VALUES (%s, %s)" 
     params = (tournament_id, player_id)
     sql("commit",query,params)
@@ -187,32 +190,38 @@ def registerPlayer(name, tournament=1, tournament_name="Tournament 1"):
     Args:
       name: the player's full name (need not be unique).
     """
-    #checks for the existence of the Tournament and creates it if needed
+    # checks for the existence of the Tournament and creates it if needed
     if tournamentExists(tournament)==False:
         createTournament(tournament, tournament_name)
     createPlayer(name)
-	#gets the most recent player
+	# gets the most recent player
     query = "SELECT id FROM Players ORDER BY id DESC LIMIT 1"
     player_id = sql("fetchone",query)
     enterTournament(player_id[0], tournament)
     
 def byeMatch(tournament=1):
-    """Creates a bye match."""
+    """Returns the bye round match-up. The bye round must already be registered. """
     standings = playerStandings(tournament)
     i = 0
     result = []
+    # checks to see if the bye round is registered.
     if isRegistered(0,tournament):
+    # set fetch to the first result
         fetch = (1,)
         extender = ()
-        while i < len(standings) and fetch[0] > 0:
-            extender = standings[i]
+    # iterate through the standings to find the first player who hasn't played the bye round yet
+        while i < countPlayers(tournament) and fetch[0] > 0:
+            result = standings[i]
             query = "SELECT COUNT (*) FROM Matches where tournament_id = %s AND player_1 = %s AND player_2 = 0;"
             params = tournament, (standings[i])[0]
+            # set fetch to the ith player
             fetch = sql("fetchone",query,params)
+            # if the ith player hasn't played the bye round set the result to that player
             if fetch[0] == 0:
-                extender = (standings)[i]
+                result = (standings)[i][:2] + (0, 'bye round')
+            # otherwise, continue
             i += 1
-        result = extender
+    # return the first player that hasn't played the bye round yet. 
     return result
     
 # "delete" functions
