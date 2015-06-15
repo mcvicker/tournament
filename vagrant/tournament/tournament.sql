@@ -127,9 +127,9 @@ RETURNS TABLE(tournament_id int, player_id int, name text, wins bigint, omw nume
 	FROM v_registrant_names
 	LEFT OUTER JOIN v_wins ON (v_registrant_names.player_id = v_wins.player_id)
 	LEFT OUTER JOIN v_registrant_matches ON (v_registrant_matches.player_id=v_registrant_names.player_id)
-	LEFT OUTER JOIN omw ON (v_wins.player_id = omw.player_id)
+	LEFT OUTER JOIN omw ON (v_registrant_names.player_id = omw.player_id)
     WHERE v_registrant_names.tournament_id = $1
-	ORDER BY wins desc, omw desc;
+	ORDER BY wins desc, omw desc, player_id;
 $$ LANGUAGE SQL;
 
 --insert an artificial player to act as the bye round. 
