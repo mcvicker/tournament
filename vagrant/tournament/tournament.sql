@@ -1,13 +1,17 @@
 /* 
 Table definitions for the tournament project - extra credit version.
 This implementation by Daniel McVicker, begun 2015-04-30
+Completed 2015-06-15
 This file contains SQL 'create table' and 'create view' statements
+as well as some SQL and PG/SQL functions. 
  
 CAUTION: this script will drop your existing database. 
 Be certain you want to create or recreate the database before running!
 
-To run this file, start psql from the directory where this file is on your vagrant box and enter: 
-"\i tournament.sql"  run from the psql console. 
+To run this file, start psql from the directory where this file is on your 
+box and enter: 
+"\i tournament.sql"  
+from the psql console. 
 */
 
 -----------------------------------ENTER SCRIPT-----------------------------------
@@ -42,9 +46,9 @@ PRIMARY KEY (tournament_id, player_id)
 
 
 /*Create a table to store match information: tournament, player_1, player_2, and winner
-Winner must be nullable to support tie games. Constrain Matches so that only registered players
+Winner must be nullable to support tie games. Matches are constrained so that only registered players
 can have a match and they must be registered for the same tournament. 
-Constrain Matches so that a player can't play himself. 
+Matches are also constrained so that a player can't play himself. 
 */
 
 CREATE TABLE Matches
@@ -64,7 +68,7 @@ For example: Players A and B can play each other in tournament 1, but then B, A
 cannot play each other in the same tournament. A and B can play each other again in tournament 2 but again, only
 once. */
 
-CREATE UNIQUE INDEX ithunderdome on Matches(tournament_id,GREATEST(player_1,player_2), LEAST(player_1,player_2));
+CREATE UNIQUE INDEX isinglematchup on Matches(tournament_id,GREATEST(player_1,player_2), LEAST(player_1,player_2));
 
 --view of registered players
 
@@ -73,6 +77,7 @@ SELECT Registrants.tournament_id, Registrants.player_id, name
 FROM Registrants, Players WHERE registrants.player_id=Players.id AND registrants.player_id!=0;
 
 --view of the wins accumulated
+
 CREATE VIEW v_wins AS
 SELECT Tournaments.id AS tournament_id, Matches.winner AS player_id, count (*) as wins
 FROM Players, Tournaments, Matches
@@ -82,6 +87,7 @@ GROUP BY Tournaments.id, Matches.winner
 ORDER BY player_id;
 
 --view of the matches for each registrant
+
 CREATE VIEW v_registrant_matches AS
 SELECT Registrants.player_id, count (*) AS matches FROM  Matches , Registrants
 WHERE Matches.player_1=Registrants.player_id OR Matches.player_2=Registrants.player_id
@@ -90,6 +96,7 @@ GROUP BY Registrants.player_id;
 --create functions to create Opponent Match Wins Functionality
 
 --gets OMW for a single player
+
 CREATE OR REPLACE FUNCTION getplayeropponents(player integer)
 RETURNS TABLE(player_id int, omw numeric) AS $$
 	SELECT $1 as omw_Player, SUM (wins) as omw from (SELECT DISTINCT PLAYER_2 AS player_id FROM
@@ -101,6 +108,7 @@ RETURNS TABLE(player_id int, omw numeric) AS $$
 $$ LANGUAGE SQL;
 
 --loops through all registered players for a given tournament, getting OMW for each
+
 CREATE OR REPLACE FUNCTION gettournamentomw(tournament integer)
 RETURNS TABLE(player_id int, omw numeric) AS $BODY$
 DECLARE
@@ -115,9 +123,10 @@ $BODY$
 LANGUAGE 'plpgsql' ;
 
 -- compile the overall standings: id, name, wins, matches
+-- This function returns more data than is strictly needed to pass the test cases.
+-- It is limited in the python portion but could easily deliver all this information with minor modification.
 
 CREATE OR REPLACE FUNCTION getstandings(tournament integer)
---this function returns more data than is absolutely necessary to pass the tests
 RETURNS TABLE(tournament_id int, player_id int, name text, wins bigint, omw numeric, matches bigint) AS $$
 	WITH omw AS (SELECT * FROM gettournamentomw($1))
 	SELECT v_registrant_names.tournament_id, v_registrant_names.player_id, v_registrant_names.name, 
