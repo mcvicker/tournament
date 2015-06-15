@@ -48,9 +48,13 @@ def sql(type,query,params=()):
 def createTournament(id=1, name="Tournament 1"):
     """Create a new tournament."""
 	#insert the values provided into the Tournaments table if it doesn't already exist.
-    query = "INSERT INTO Tournaments (id, name)SELECT %s, %s WHERE NOT EXISTS (SELECT id FROM Tournaments WHERE id = %s)"
-    params = (id, name, id)
-    sql("commit",query, params)
+    if tournamentExists()==False:
+        query = "INSERT INTO Tournaments (id, name)SELECT %s, %s WHERE NOT EXISTS (SELECT id FROM Tournaments WHERE id = %s)"
+        params = (id, name, id)
+        sql("commit",query, params)
+    else:
+        raise ValueError(
+            "Tournament %d already exists." % id)
     
     
 def createPlayer(name):
@@ -67,7 +71,8 @@ def reportMatch(winner, loser, tournament=1, tied="n"):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
-    createTournament()
+    if tournamentExists(tournament)==False:
+        createTournament(tournament)
     if tied=="n":
         query = "INSERT INTO Matches (tournament_id, player_1, player_2, winner) VALUES (%s, %s, %s, %s)"
         params = (tournament, winner, loser, winner)
@@ -98,6 +103,19 @@ def isRegistered(player_id=0,tournament_id=1):
     else:
         return False
 
+def tournamentExists(tournament=1):
+    """Determines if a specific tournament already exists or not."""
+    query = "SELECT COUNT(*) FROM Tournaments WHERE id = %s"
+    params = (tournament,)
+    fetch = sql("fetchone",query,params)
+    if fetch[0] == 0:
+        return False
+    elif fetch[0] == 1:
+        return True
+    else:
+        raise ValueError(
+            "Check database for consistency.")
+            
 def playerStandings(tournament=1):
     """Returns a list of the players and their win records, sorted by wins.
 
@@ -170,7 +188,8 @@ def registerPlayer(name, tournament=1, tournament_name="Tournament 1"):
       name: the player's full name (need not be unique).
     """
     #checks for the existence of the Tournament and creates it if needed
-    createTournament(tournament, tournament_name)
+    if tournamentExists(tournament)==False:
+        createTournament(tournament, tournament_name)
     createPlayer(name)
 	#gets the most recent player
     query = "SELECT id FROM Players ORDER BY id DESC LIMIT 1"
