@@ -1,4 +1,7 @@
 #!bin/bash
+# exit existing connections to the tournament database before running this script.
+# otherwise connections from other terminals will have to be recreated.
+
 echo "Creating or recreating tournament database..."
 echo " "
 psql -X -d vagrant -f tournament.sql
