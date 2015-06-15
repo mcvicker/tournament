@@ -124,8 +124,13 @@ def testPairings():
             "After one match, players with one win should be paired.")
     print "8. After one match, players with one win are paired."
 
+# tests after this point were written to test the extended functionality.
 
-#this is to test the results of an Odd Number of registrants
+# this is to test the results of an Odd Number of registrants
+# one player should get paired with a bye round in each round
+# of a tournament with an odd number of entrants.
+# A player should only be matched with the bye round once. 
+
 def testOdd():
     deleteMatches()
     deletePlayers()
@@ -148,7 +153,8 @@ def testOdd():
             "After one match, the bye round should not repeat.")
     print "10. After one match, the bye round does not repeat."
 
-#this function tests if ties are supported
+# this function tests if ties are supported
+
 def testTied():
     deleteMatches()
     deletePlayers()
@@ -167,7 +173,10 @@ def testTied():
             "Tied matches not supported.")
     print "11. Tied matches can be reported."
 
-#this function tests if multiple tournaments are supported. 
+# this function tests if multiple tournaments are supported. 
+# it is explicitly based on linusdong's method here:
+# https://github.com/linusdong/Udacity_Nanodegree_FullStackWeb/blob/master/P2/extra_test.py
+
 def testMultipleTourneys():
     deleteMatches()
     deletePlayers()
@@ -202,27 +211,65 @@ def testMultipleTourneys():
             "After one match, players with one win should be paired.")
     print "12. After one match, players with one win in each tourney are paired."
 
-#this function tests to see if results are sorted by opponent match wins. 
+# this function tests to see if results are sorted by opponent match wins.
+# this test is explicitly based on this example: http://www.johnpratt.com/items/docs/ranker/swiss.html
+# and the approach is very similar to Jeff from Udacity's approach: 
+# https://gist.github.com/jeffudacity/d4ccde9860a7ae40070a
+
 def testOMW():
     deleteMatches()
     deletePlayers()
     deleteTournaments()
-    createTournament(1,"World Martial Arts Championship")
-    registerPlayer("Krillin")
-    registerPlayer("Prince Vegeta")
-    registerPlayer("Freeza")
-    registerPlayer("Son Goku")
+    createTournament(1,"World Martial Arts Tournament")
+    players = [
+        (1, 'Goku'),
+        (2, 'Freeza'),
+        (3, 'Piccolo'),
+        (4, 'Cell'),
+        (5, 'Vegeta'),
+        (6, 'Android 18'),
+        (7, 'Yamcha'),
+        (8, 'Tien'),
+        (9, 'Trunks'),
+        (10, 'Gohan')
+    ]
+
+    for player in players:
+        registerPlayer(player[1])
     standings1 = playerStandings()
-    [id1, id2, id3, id4] = [row[0] for row in standings1]
-    for x in range (0,90):
-        reportMatch(id1, id4)
-    reportMatch(id2,id1)
-    reportMatch(id3,id4)
+    [id1, id2, id3, id4, id5, id6, id7, id8, id9, id10] = [row[0] for row in standings1]
+    reportMatch(id1,id6)
+    reportMatch(id2,id7)
+    reportMatch(id3,id8)
+    reportMatch(id4,id9)
+    reportMatch(id5,id10)
+   
+   # end of round 1
+    
+    reportMatch(id1,id3)
+    reportMatch(id2,id4)
+    reportMatch(id5,id6)
+    reportMatch(id7,id9)
+    reportMatch(id8,id10)
+    
+    # end of round 2
+    
+    reportMatch(id1,id4)
+    reportMatch(id2,id6)
+    reportMatch(id3,id10)
+    reportMatch(id5,id7)
+    reportMatch(id8,id9)
+    
+    # end of round 3
+    
     standings2 = playerStandings()
-    [idtest1, idtest2, idtest3, idtest4] = [row[0] for row in standings2]
-    initial_standings = set([frozenset([id1,id2,id3,id4])])
-    test_standings = set([frozenset([idtest1,idtest2,idtest3,idtest4])])
-    if initial_standings != test_standings:
+    [pid1, pid2, pid3, pid4, pid5, pid6, pid7, pid8, pid9, pid10] = [row[0] for row in standings2]
+    initial_standings = ([id1, id2, id5, id3, id8, id4, id7, id6, id10, id9])
+    final_standings = ([pid1, pid2, pid3, pid4, pid5, pid6, pid7, pid8, pid9, pid10])
+    
+    # used a tuple instead of a set to make sure that the order matters. 
+    
+    if initial_standings != final_standings:
         raise ValueError(
             "Players are not sorted by Opponent Match Wins.")
     print "13. Standings are sorted by Opponent Match Wins."
@@ -242,7 +289,7 @@ if __name__ == '__main__':
     testOdd()
     testTied()
     testMultipleTourneys()
-    #testOMW()
-    print "Success!  All tests pass!"
+    testOMW()
+    print "Success!  All tests pass! \n"
 
 

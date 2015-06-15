@@ -142,6 +142,7 @@ RETURNS TABLE(tournament_id int, player_id int, name text, wins bigint, omw nume
 $$ LANGUAGE SQL;
 
 --insert an artificial player to act as the bye round. 
+
 INSERT INTO Players (id, name) VALUES (0, 'bye round');
 
 
