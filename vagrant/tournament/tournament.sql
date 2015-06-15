@@ -16,7 +16,15 @@ from the psql console.
 
 -----------------------------------ENTER SCRIPT-----------------------------------
 
+-- kill any existing connections to the tournament database
+
+SELECT pg_terminate_backend(pg_stat_activity.pid)
+FROM pg_stat_activity
+WHERE pg_stat_activity.datname = 'tournament'
+  AND pid != pg_backend_pid();
+
 -- Create database "tournament" and connect to that database before creating tables
+
 \c vagrant
 DROP DATABASE IF EXISTS tournament;
 CREATE DATABASE tournament;
